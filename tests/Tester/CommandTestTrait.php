@@ -65,16 +65,24 @@ trait CommandTestTrait
         $mock->shouldReceive('exec')
             ->andReturnUsing(function (...$val) use (&$spy) {
                 $this->spy[] = $val;
-                $current_work_dir = getcwd();
 
-                chdir($this->local_test_repository);
-
-                $execute_cmd = $val[0] . ' 2>&1';
-                $res = `$execute_cmd`;
+                $descriptorspec = [
+                    0 => ['pipe', 'r'],
+                    1 => ['pipe', 'w'],
+                    2 => ['pipe', 'w'],
+                ];
+                $process = proc_open(['sh', '-c', $val[0]], $descriptorspec, $cmdPipes, $this->local_test_repository);
+                $res = '';
+                if (is_resource($process)) {
+                    fclose($cmdPipes[0]);
+                    $res = stream_get_contents($cmdPipes[1]) . stream_get_contents($cmdPipes[2]);
+                    fclose($cmdPipes[1]);
+                    fclose($cmdPipes[2]);
+                    proc_close($process);
+                }
 
                 dump($val);
                 dump($res);
-                chdir($current_work_dir);
 
                 return $res;
             });

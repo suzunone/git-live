@@ -54,16 +54,20 @@ trait MakeGitTestRepoTrait
 
     public function execCmdToLocalRepo($cmd)
     {
-        // カレント取得
-        $current_work_dir = getcwd();
-
-        chdir($this->local_test_repository);
-
-        $execute_cmd = $cmd . ' 2>&1';
-        $res = shell_exec($execute_cmd);
-
-        // 場所をもとに戻す
-        chdir($current_work_dir);
+        $descriptorspec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $process = proc_open(['sh', '-c', $cmd . ' 2>&1'], $descriptorspec, $pipes, $this->local_test_repository);
+        $res = '';
+        if (is_resource($process)) {
+            fclose($pipes[0]);
+            $res = stream_get_contents($pipes[1]) . stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            proc_close($process);
+        }
 
         return $res;
     }
@@ -77,15 +81,11 @@ trait MakeGitTestRepoTrait
 
     protected function makeGitTestRepoTraitBoot()
     {
-        // カレント取得
-        $current_work_dir = getcwd();
-
         $ds = DIRECTORY_SEPARATOR;
         $storage = PROJECT_ROOT_DIR . $ds . 'storage' . $ds . 'unit_testing';
 
         // 初期化
-        $cmd = "rm -rf {$storage}";
-        shell_exec($cmd);
+        shell_exec("rm -rf {$storage}");
 
         $remote_origin = $storage . $ds . 'git_live_origin_test.git';
         $remote_upstream = $storage . $ds . 'git_live_upstream_test.git';
@@ -96,20 +96,19 @@ trait MakeGitTestRepoTrait
         shell_exec("git init --bare --shared=true {$remote_upstream}");
 
         mkdir($init_working);
-        chdir($init_working);
-        shell_exec('git init');
-        shell_exec('git config --local gitlive.branch.develop.name "staging"');
-        shell_exec("git remote add origin {$remote_upstream}");
-        shell_exec('git remote -v');
+        $this->execInDir($init_working, 'git init');
+        $this->execInDir($init_working, 'git config --local gitlive.branch.develop.name "staging"');
+        $this->execInDir($init_working, "git remote add origin {$remote_upstream}");
+        $this->execInDir($init_working, 'git remote -v');
         file_put_contents($init_working . $ds . 'README.md', '# unit testing Read me');
         file_put_contents($init_working . $ds . 'LICENSE.md', '# unit testing License');
-        shell_exec('git add ./');
-        shell_exec('git commit -am "init"');
-        shell_exec('git push origin master');
-        shell_exec('git checkout -b develop');
-        shell_exec('git push origin develop');
-        shell_exec('git checkout -b staging');
-        shell_exec('git push origin staging');
+        $this->execInDir($init_working, 'git add ./');
+        $this->execInDir($init_working, 'git commit -am "init"');
+        $this->execInDir($init_working, 'git push origin master');
+        $this->execInDir($init_working, 'git checkout -b develop');
+        $this->execInDir($init_working, 'git push origin develop');
+        $this->execInDir($init_working, 'git checkout -b staging');
+        $this->execInDir($init_working, 'git push origin staging');
 
         shell_exec("git clone {$remote_upstream} {$remote_origin}");
         shell_exec("git init --bare --shared=true {$remote_origin}");
@@ -117,35 +116,45 @@ trait MakeGitTestRepoTrait
         shell_exec("git clone {$remote_upstream} {$remote_deploy}");
         shell_exec("git init --bare --shared=true {$remote_deploy}");
 
-        chdir($storage);
-
         $remote_deploy = $storage . $ds . 'local_test';
         $cmd = $this->git_live . " init {$remote_origin} {$remote_upstream} {$remote_deploy} {$local_test}";
-        shell_exec($cmd);
+        $this->execInDir($storage, $cmd);
 
-        chdir($local_test);
-        shell_exec('git checkout upstream/develop');
-
-        shell_exec('git config --local gitlive.branch.develop.name "staging"');
-
-        shell_exec('git checkout -b develop');
-        shell_exec('git push origin develop');
-        shell_exec('git push deploy develop');
-
-        shell_exec('git checkout -b staging');
-        shell_exec('git push origin staging');
-        shell_exec('git push deploy staging');
-
-        shell_exec('git checkout master');
+        $this->execInDir($local_test, 'git checkout upstream/develop');
+        $this->execInDir($local_test, 'git config --local gitlive.branch.develop.name "staging"');
+        $this->execInDir($local_test, 'git checkout -b develop');
+        $this->execInDir($local_test, 'git push origin develop');
+        $this->execInDir($local_test, 'git push deploy develop');
+        $this->execInDir($local_test, 'git checkout -b staging');
+        $this->execInDir($local_test, 'git push origin staging');
+        $this->execInDir($local_test, 'git push deploy staging');
+        $this->execInDir($local_test, 'git checkout master');
 
         // 変数定義
         $this->remote_upstream_repository = $remote_upstream;
         $this->remote_deploy_repository = $remote_deploy;
         $this->remote_origin_repository = $remote_origin;
         $this->local_test_repository = $local_test;
+    }
 
-        // 場所をもとに戻す
-        chdir($current_work_dir);
+    private function execInDir(string $dir, string $cmd): string
+    {
+        $descriptorspec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $process = proc_open(['sh', '-c', $cmd . ' 2>&1'], $descriptorspec, $pipes, $dir);
+        $res = '';
+        if (is_resource($process)) {
+            fclose($pipes[0]);
+            $res = stream_get_contents($pipes[1]) . stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            proc_close($process);
+        }
+
+        return $res;
     }
 
     /**

@@ -2376,6 +2376,14 @@ class DeployBaseTest extends TestCase
             });
 
         $systemCommand->shouldReceive('exec')
+            ->once()
+            ->with('git rev-parse --abbrev-ref HEAD', 256, 256)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return 'v2.0';
+            });
+        $systemCommand->shouldReceive('exec')
             ->andReturnUsing(static function (...$val) use (&$spy) {
                 $spy[] = $val;
 
@@ -2455,25 +2463,26 @@ class DeployBaseTest extends TestCase
             12 => "git checkout unit_deploy/v2.0",
             13 => "git branch -D v2.0",
             14 => "git checkout -b v2.0",
-            15 => "git format-patch `git rev-parse --abbrev-ref HEAD`..deploy/unit_release/unit_test_release_1234 --stdout",
-            16 => "git merge deploy/unit_release/unit_test_release_1234",
-            17 => "git diff unit_deploy/unit_release/unit_test_release_1234 v2.0",
-            18 => "git push upstream v2.0",
-            19 => "git push unit_deploy v2.0",
-            20 => "git checkout upstream/stage",
-            21 => "git branch -D stage",
-            22 => "git checkout -b stage",
-            23 => "git merge unit_deploy/unit_release/unit_test_release_1234",
-            24 => "git diff unit_deploy/unit_release/unit_test_release_1234 stage",
-            25 => "git push upstream stage",
-            26 => "git push unit_deploy :unit_release/unit_test_release_1234",
-            27 => "git push upstream :unit_release/unit_test_release_1234",
-            28 => "git branch -d unit_release/unit_test_release_1234",
-            29 => "git fetch upstream",
-            30 => "git checkout upstream/v2.0",
-            31 => "git tag runit_test_release_1234",
-            32 => "git push upstream --tags",
-            33 => "git checkout stage",
+            15 => "git rev-parse --abbrev-ref HEAD",
+            16 => "git format-patch v2.0..deploy/unit_release/unit_test_release_1234 --stdout",
+            17 => "git merge deploy/unit_release/unit_test_release_1234",
+            18 => "git diff unit_deploy/unit_release/unit_test_release_1234 v2.0",
+            19 => "git push upstream v2.0",
+            20 => "git push unit_deploy v2.0",
+            21 => "git checkout upstream/stage",
+            22 => "git branch -D stage",
+            23 => "git checkout -b stage",
+            24 => "git merge unit_deploy/unit_release/unit_test_release_1234",
+            25 => "git diff unit_deploy/unit_release/unit_test_release_1234 stage",
+            26 => "git push upstream stage",
+            27 => "git push unit_deploy :unit_release/unit_test_release_1234",
+            28 => "git push upstream :unit_release/unit_test_release_1234",
+            29 => "git branch -d unit_release/unit_test_release_1234",
+            30 => "git fetch upstream",
+            31 => "git checkout upstream/v2.0",
+            32 => "git tag runit_test_release_1234",
+            33 => "git push upstream --tags",
+            34 => "git checkout stage",
         ], data_get($spy, '*.0'));
     }
 }
