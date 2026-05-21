@@ -40,10 +40,8 @@ class LogMasterCommand extends BaseLogCommand
     {
         parent::configure();
         $this
-            // the short description shown while running "php bin/console list"
+            ->setAliases(['log:main'])
             ->setDescription(__('Show diff upstream master branch.'))
-            // the full command description shown when running the command with
-            // the "--help" option
             ->setHelp(resource()->help(self::$defaultName, $this->getDescription()));
     }
 

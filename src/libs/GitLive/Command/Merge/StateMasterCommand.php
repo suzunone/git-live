@@ -56,10 +56,8 @@ class StateMasterCommand extends CommandBase
     {
         parent::configure();
         $this
-            // the short description shown while running "php bin/console list"
+            ->setAliases(['merge:state:main'])
             ->setDescription(__('Prior confirmation of merge master.'))
-            // the full command description shown when running the command with
-            // the "--help" option
             ->setHelp(resource()->help(self::$defaultName, $this->getDescription()));
     }
 

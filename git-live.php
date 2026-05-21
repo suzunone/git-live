@@ -18,7 +18,6 @@
  * @see        https://github.com/Git-Live/git-live
  */
 
-error_reporting(E_ALL & ~E_DEPRECATED);
 include __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 
 if (!defined('GIT_LIVE_INSTALL_PATH')) {
@@ -30,6 +29,9 @@ if (!defined('GIT_LIVE_INSTALL_PATH')) {
 }
 
 
+if (GIT_LIVE_VERSION === 'phar') {
+    error_reporting(E_ALL & ~E_DEPRECATED);
+}
 $GitLive = \GitLive\Application\Facade::make(\GitLive\GitLive::class);
 $GitLive->execute();
 
