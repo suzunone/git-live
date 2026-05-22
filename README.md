@@ -9,6 +9,10 @@
 ![php-version](https://img.shields.io/badge/php-7.4-blue.svg)
 ![php-version](https://img.shields.io/badge/php-8.0-blue.svg)
 ![php-version](https://img.shields.io/badge/php-8.1-blue.svg)
+![php-version](https://img.shields.io/badge/php-8.2-blue.svg)
+![php-version](https://img.shields.io/badge/php-8.3-blue.svg)
+![php-version](https://img.shields.io/badge/php-8.4-blue.svg)
+![php-version](https://img.shields.io/badge/php-8.5-blue.svg)
 ## git-flow
 Although "[git-flow](http://nvie.com/posts/a-successful-git-branching-model/)" has the complexity as pointed out in "[github-flow](http://scottchacon.com/2011/08/31/github-flow.html)", it is familiar already as a standard workflow
 
