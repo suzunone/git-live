@@ -158,9 +158,6 @@ class ConfigDriverTest extends TestCase
     /**
      * gitlive.branch.master.name も init.defaultBranch も未設定の場合、
      * デフォルト値 'master' を返すことを確認する
-     *
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
      */
     public function testMasterFallbackToDefault()
     {
