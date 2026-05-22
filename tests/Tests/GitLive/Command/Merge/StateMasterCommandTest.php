@@ -102,8 +102,9 @@ class StateMasterCommandTest extends TestCase
             3 => 'git fetch -p',
             4 => 'git fetch upstream',
             5 => 'git fetch -p upstream',
-            6 => 'git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/master --stdout',
-            7 => 'git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/master --stdout| git apply --check',
+            6 => 'git rev-parse --abbrev-ref HEAD',
+            7 => 'git format-patch feature/suzunone_branch..upstream/master --stdout',
+            8 => 'git format-patch feature/suzunone_branch..upstream/master --stdout | git apply --check',
         ], data_get($this->spy, '*.0'));
     }
 
@@ -161,8 +162,9 @@ class StateMasterCommandTest extends TestCase
             3 => 'git fetch -p',
             4 => 'git fetch upstream',
             5 => 'git fetch -p upstream',
-            6 => 'git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/master --stdout',
-            7 => 'git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/master --stdout| git apply --check',
+            6 => 'git rev-parse --abbrev-ref HEAD',
+            7 => 'git format-patch feature/suzunone_branch..upstream/master --stdout',
+            8 => 'git format-patch feature/suzunone_branch..upstream/master --stdout | git apply --check',
         ], data_get($this->spy, '*.0'));
     }
 }

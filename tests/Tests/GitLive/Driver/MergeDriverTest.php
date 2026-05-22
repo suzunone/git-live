@@ -91,21 +91,20 @@ class MergeDriverTest extends TestCase
             });
         $mock->shouldReceive('exec')
             ->once()
-            ->with('git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/stage --stdout', 256, 256)
+            ->with('git rev-parse --abbrev-ref HEAD', 256, 256)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return 'feature/suzunone_branch';
+            });
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git format-patch feature/suzunone_branch..upstream/stage --stdout', 256, 256)
             ->andReturnUsing(static function (...$val) use (&$spy) {
                 $spy[] = $val;
 
                 return '';
             });
-        /*
-        $mock->shouldReceive('exec')
-            ->once()
-            ->with('git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/stage --stdout| git apply --check', 256, 256)
-            ->andReturnUsing(function(...$val) use (&$spy) {
-                $spy[] = $val;
-                return '';
-            });
-*/
         $mock->shouldReceive('exec')
             ->once()
             ->with('git fetch --all', false, null)
@@ -158,7 +157,8 @@ class MergeDriverTest extends TestCase
             'git fetch -p',
             'git fetch upstream',
             'git fetch -p upstream',
-            'git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/stage --stdout',
+            'git rev-parse --abbrev-ref HEAD',
+            'git format-patch feature/suzunone_branch..upstream/stage --stdout',
         ], data_get($spy, '*.0'));
     }
 
@@ -207,7 +207,15 @@ class MergeDriverTest extends TestCase
             });
         $mock->shouldReceive('exec')
             ->once()
-            ->with('git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/master --stdout', 256, 256)
+            ->with('git rev-parse --abbrev-ref HEAD', 256, 256)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return 'feature/suzunone_branch';
+            });
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git format-patch feature/suzunone_branch..upstream/master --stdout', 256, 256)
             ->andReturnUsing(static function (...$val) use (&$spy) {
                 $spy[] = $val;
 
@@ -216,7 +224,7 @@ class MergeDriverTest extends TestCase
 
         $mock->shouldReceive('exec')
             ->once()
-            ->with('git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/master --stdout| git apply --check', false, 256)
+            ->with('git format-patch feature/suzunone_branch..upstream/master --stdout | git apply --check', false, 256)
             ->andReturnUsing(static function (...$val) use (&$spy) {
                 $spy[] = $val;
 
@@ -277,8 +285,9 @@ class MergeDriverTest extends TestCase
             'git fetch -p',
             'git fetch upstream',
             'git fetch -p upstream',
-            'git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/master --stdout',
-            'git format-patch `git rev-parse --abbrev-ref HEAD`..upstream/master --stdout| git apply --check',
+            'git rev-parse --abbrev-ref HEAD',
+            'git format-patch feature/suzunone_branch..upstream/master --stdout',
+            'git format-patch feature/suzunone_branch..upstream/master --stdout | git apply --check',
         ], data_get($spy, '*.0'));
     }
 

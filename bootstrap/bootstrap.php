@@ -45,7 +45,7 @@ if (!function_exists('\textdomain')) {
     $domain = 'messages';
 
     // LANG
-    $locale = trim(`echo \$LANG`);
+    $locale = trim((string)getenv('LANG'));
     if (empty($locale)) {
         $locale = 'ja_JP.UTF-8';
     }
