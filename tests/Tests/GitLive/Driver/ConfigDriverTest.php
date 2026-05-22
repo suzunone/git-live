@@ -42,14 +42,12 @@ use Tests\GitLive\Tester\TestCase;
  * @see        https://github.com/Git-Live/git-live
  * @since      2018-12-16
  * @internal
- * @coversNothing
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\GitLive\Driver\ConfigDriver::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\GitLive\Driver\DriverBase::class)]
+#[\PHPUnit\Framework\Attributes\CoversNothing]
 class ConfigDriverTest extends TestCase
 {
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testMaster()
     {
         $spy = [];
@@ -98,9 +96,128 @@ class ConfigDriverTest extends TestCase
     }
 
     /**
+     * gitlive.branch.master.name 未設定 & init.defaultBranch = 'main' の場合、
+     * main を返すことを確認する
+     */
+    public function testMasterFallbackToInitDefaultBranch()
+    {
+        $spy = [];
+        $mock = \Mockery::mock(SystemCommand::class);
+
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git rev-parse --git-dir 2> /dev/null', 256, 256)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return '.git';
+            });
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git config --get gitlive.branch.master.name', true, null)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return '';
+            });
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git config --get init.defaultBranch', true, null)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return 'main';
+            });
+
+        Container::bind(
+            SystemCommandInterface::class,
+            static function () use ($mock) {
+                return $mock;
+            }
+        );
+
+        $ConfigDriver = App::make(ConfigDriver::class);
+
+        $res = $ConfigDriver->master();
+
+        $this->assertSame('main', $res);
+
+        dump(data_get($spy, '*.0'));
+        $this->assertSame([
+            0 => 'git rev-parse --git-dir 2> /dev/null',
+            1 => 'git config --get gitlive.branch.master.name',
+            2 => 'git config --get init.defaultBranch',
+        ], data_get($spy, '*.0'));
+
+        $res = $ConfigDriver->master();
+
+        $this->assertSame('main', $res);
+        $this->assertCount(3, $spy);
+    }
+
+    /**
+     * gitlive.branch.master.name も init.defaultBranch も未設定の場合、
+     * デフォルト値 'master' を返すことを確認する
+     *
      * @covers \GitLive\Driver\ConfigDriver
      * @covers \GitLive\Driver\DriverBase
      */
+    public function testMasterFallbackToDefault()
+    {
+        $spy = [];
+        $mock = \Mockery::mock(SystemCommand::class);
+
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git rev-parse --git-dir 2> /dev/null', 256, 256)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return '.git';
+            });
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git config --get gitlive.branch.master.name', true, null)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return '';
+            });
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git config --get init.defaultBranch', true, null)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return '';
+            });
+
+        Container::bind(
+            SystemCommandInterface::class,
+            static function () use ($mock) {
+                return $mock;
+            }
+        );
+
+        $ConfigDriver = App::make(ConfigDriver::class);
+
+        $res = $ConfigDriver->master();
+
+        $this->assertSame('master', $res);
+
+        dump(data_get($spy, '*.0'));
+        $this->assertSame([
+            0 => 'git rev-parse --git-dir 2> /dev/null',
+            1 => 'git config --get gitlive.branch.master.name',
+            2 => 'git config --get init.defaultBranch',
+        ], data_get($spy, '*.0'));
+
+        $res = $ConfigDriver->master();
+
+        $this->assertSame('master', $res);
+        $this->assertCount(3, $spy);
+    }
+
     public function testSetGlobalParameter()
     {
         $spy = [];
@@ -143,10 +260,6 @@ class ConfigDriverTest extends TestCase
         ], data_get($spy, '*.0'));
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testDeployRemote()
     {
         $spy = [];
@@ -194,10 +307,6 @@ class ConfigDriverTest extends TestCase
         $this->assertCount(2, $spy);
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testReleasePrefix()
     {
         $spy = [];
@@ -246,10 +355,6 @@ class ConfigDriverTest extends TestCase
         $this->assertCount(2, $spy);
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testSetLocalParameter()
     {
         $spy = [];
@@ -292,10 +397,6 @@ class ConfigDriverTest extends TestCase
         ], data_get($spy, '*.0'));
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testSetSystemParameter()
     {
         $spy = [];
@@ -338,10 +439,6 @@ class ConfigDriverTest extends TestCase
         ], data_get($spy, '*.0'));
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testGetGitLiveParameter()
     {
         $spy = [];
@@ -384,10 +481,6 @@ class ConfigDriverTest extends TestCase
         ], data_get($spy, '*.0'));
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testFeaturePrefix()
     {
         $spy = [];
@@ -445,10 +538,6 @@ class ConfigDriverTest extends TestCase
         $this->assertCount(4, $spy);
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testFeaturePrefixIgnore()
     {
         $spy = [];
@@ -504,10 +593,6 @@ class ConfigDriverTest extends TestCase
         $this->assertCount(2, $spy);
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testHotfixPrefix()
     {
         $spy = [];
@@ -555,10 +640,6 @@ class ConfigDriverTest extends TestCase
         $this->assertCount(2, $spy);
     }
 
-    /**
-     * @covers \GitLive\Driver\ConfigDriver
-     * @covers \GitLive\Driver\DriverBase
-     */
     public function testDevelop()
     {
         $spy = [];
