@@ -20,6 +20,7 @@
 
 namespace GitLive\Driver;
 
+use GitLive\GitLive;
 use Symfony\Component\Console\Input\InputInterface;
 
 /**
@@ -108,6 +109,30 @@ class InitDriver extends DriverBase
         if ($deploy_repository !== null) {
             $this->GitCmdExecutor->remote(['add', 'deploy', $deploy_repository]);
         }
+
+        $this->autoSetMasterBranchName();
+    }
+
+    /**
+     * Detect the default branch name from origin HEAD and write it to gitlive config.
+     *
+     * @throws \ErrorException
+     * @return void
+     */
+    protected function autoSetMasterBranchName(): void
+    {
+        $ref = trim((string)$this->exec('git symbolic-ref refs/remotes/origin/HEAD', true, true));
+        if ($ref !== '' && str_contains($ref, '/')) {
+            $branch = substr($ref, strrpos($ref, '/') + 1);
+        } else {
+            $branch = trim((string)$this->GitCmdExecutor->config(['--get', 'init.defaultBranch']));
+        }
+
+        if ($branch === '') {
+            $branch = GitLive::DEFAULT_MASTER_BRANCH_NAME;
+        }
+
+        $this->Driver(ConfigDriver::class)->setLocalParameter(ConfigDriver::MASTER_NAME_KEY, $branch);
     }
 
     /**

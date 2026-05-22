@@ -263,15 +263,16 @@ abstract class DriverBase extends GitBase
      */
     public function patchApplyDiff(string $from, bool $verbosity = false): string
     {
-        // 一度diffを取る
-        $cmd = 'git format-patch `git rev-parse --abbrev-ref HEAD`..' . $from . ' --stdout';
+        $branch = trim((string)$this->exec('git rev-parse --abbrev-ref HEAD', OutputInterface::VERBOSITY_DEBUG, OutputInterface::VERBOSITY_DEBUG));
+
+        $cmd = 'git format-patch ' . $branch . '..' . $from . ' --stdout';
         $ck = trim((string)$this->exec($cmd, OutputInterface::VERBOSITY_DEBUG, OutputInterface::VERBOSITY_DEBUG));
 
         if ($ck === '') {
             return '';
         }
 
-        $cmd = 'git format-patch `git rev-parse --abbrev-ref HEAD`..' . $from . ' --stdout| git apply --check';
+        $cmd = 'git format-patch ' . $branch . '..' . $from . ' --stdout | git apply --check';
         $res = $this->exec($cmd, $verbosity, OutputInterface::VERBOSITY_DEBUG);
 
         return trim((string)$res);

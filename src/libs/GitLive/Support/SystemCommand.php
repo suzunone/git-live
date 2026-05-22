@@ -75,10 +75,23 @@ class SystemCommand extends GitBase implements SystemCommandInterface
             $this->output->writeln('<fg=cyan;options=bold>' . $cmd . '</>', $verbosity);
         }
 
-        $execute_cmd = $cmd . ' 2>&1';
+        $this->output->writeln('<fg=yellow>' . $cmd . '</>', OutputInterface::VERBOSITY_DEBUG);
 
-        $this->output->writeln('<fg=yellow>' . $execute_cmd . '</>', OutputInterface::VERBOSITY_DEBUG);
-        $res = shell_exec($execute_cmd);
+        $descriptorspec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = proc_open(['sh', '-c', $cmd], $descriptorspec, $pipes);
+        $res = '';
+        if (is_resource($process)) {
+            fclose($pipes[0]);
+            $res = stream_get_contents($pipes[1]) . stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            proc_close($process);
+        }
 
         $output_verbosity = $output_verbosity ?? $verbosity;
 
@@ -106,12 +119,28 @@ class SystemCommand extends GitBase implements SystemCommandInterface
             $this->output->writeln('<fg=cyan;options=bold>' . $cmd . '</>', $verbosity);
         }
 
-        $execute_cmd = $cmd . ' 2>&1';
+        $this->output->writeln('<fg=yellow>' . $cmd . '</>', OutputInterface::VERBOSITY_DEBUG);
 
-        $this->output->writeln('<fg=yellow>' . $execute_cmd . '</>', OutputInterface::VERBOSITY_DEBUG);
+        $descriptorspec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
 
-        $result_code = null;
-        $res = system($execute_cmd, $result_code);
+        $process = proc_open(['sh', '-c', $cmd], $descriptorspec, $pipes);
+        $result_code = -1;
+        $res = '';
+        if (is_resource($process)) {
+            fclose($pipes[0]);
+            $stdout = stream_get_contents($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            $result_code = proc_close($process);
+            $combined = $stdout . $stderr;
+            $lines = array_filter(explode("\n", rtrim($combined)));
+            $res = $lines ? end($lines) : '';
+        }
 
         $output_verbosity = $output_verbosity ?? $verbosity;
 

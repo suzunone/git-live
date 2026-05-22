@@ -244,7 +244,16 @@ class ConfigDriver extends DriverBase
      */
     public function master(): ?string
     {
-        return self::$cache[__METHOD__] ?? (self::$cache[__METHOD__] = $this->getGitLiveParameter(self::MASTER_NAME_KEY) ?? GitLive::DEFAULT_MASTER_BRANCH_NAME);
+        if (isset(self::$cache[__METHOD__])) {
+            return self::$cache[__METHOD__];
+        }
+
+        $value = $this->getGitLiveParameter(self::MASTER_NAME_KEY);
+        if ($value === null) {
+            $value = trim((string)$this->GitCmdExecutor->config(['--get', 'init.defaultBranch'])) ?: GitLive::DEFAULT_MASTER_BRANCH_NAME;
+        }
+
+        return self::$cache[__METHOD__] = $value;
     }
 
     /**
