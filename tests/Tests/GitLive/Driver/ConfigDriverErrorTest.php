@@ -64,6 +64,15 @@ class ConfigDriverErrorTest extends TestCase
                 return '';
             });
 
+        $mock->shouldReceive('exec')
+            ->once()
+            ->with('git config --get init.defaultBranch', true, null)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return '';
+            });
+
         Container::bind(
             SystemCommandInterface::class,
             static function () use ($mock) {
@@ -80,12 +89,13 @@ class ConfigDriverErrorTest extends TestCase
         dump(data_get($spy, '*.0'));
         $this->assertSame([
             0 => 'git rev-parse --git-dir 2> /dev/null',
+            1 => 'git config --get init.defaultBranch',
         ], data_get($spy, '*.0'));
 
         $res = $ConfigDriver->master();
 
         $this->assertSame('master', $res);
-        $this->assertCount(1, $spy);
+        $this->assertCount(2, $spy);
     }
 
     /**

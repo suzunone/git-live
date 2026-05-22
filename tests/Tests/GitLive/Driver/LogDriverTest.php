@@ -159,6 +159,15 @@ class LogDriverTest extends TestCase
 
         $mock->shouldReceive('exec')
             ->once()
+            ->with('git config --get init.defaultBranch', true, null)
+            ->andReturnUsing(static function (...$val) use (&$spy) {
+                $spy[] = $val;
+
+                return '';
+            });
+
+        $mock->shouldReceive('exec')
+            ->once()
             ->with('git fetch --all', false, null)
             ->andReturnUsing(static function (...$val) use (&$spy) {
                 $spy[] = $val;
@@ -209,6 +218,7 @@ class LogDriverTest extends TestCase
         $this->assertSame([
             'git rev-parse --git-dir 2> /dev/null',
             'git config --get gitlive.branch.master.name',
+            'git config --get init.defaultBranch',
             'git fetch --all',
             'git fetch -p',
             'git rev-parse --abbrev-ref HEAD 2> /dev/null',
